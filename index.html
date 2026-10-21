@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Instagram Video Downloader — Save Reels as MP4 | ReelSave</title>
+  <meta name="description" content="Free Instagram video downloader. Paste a public Reel or post URL, preview the clip, and save an MP4. No Instagram login. Use only videos you have the right to keep." />
+  <meta name="keywords" content="instagram video downloader, download instagram reel, save instagram video, reel to mp4, download ig reel, instagram downloader" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="ReelSave" />
+  <meta name="theme-color" content="#07080c" />
+  <link rel="canonical" href="https://kramlipi.github.io/reelsave-portal/" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ReelSave" />
+  <meta property="og:title" content="Instagram Video Downloader — Save Reels as MP4" />
+  <meta property="og:description" content="Paste a public Instagram Reel URL. Preview, then download MP4. No login." />
+  <meta property="og:url" content="https://kramlipi.github.io/reelsave-portal/" />
+  <meta property="og:image" content="https://kramlipi.github.io/reelsave-portal/favicon.svg" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ReelSave — Instagram Video Downloader" />
+  <meta name="twitter:description" content="Download public Instagram Reels as MP4. No login." />
+  <link rel="stylesheet" href="css/portal.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ReelSave",
+    "url": "https://kramlipi.github.io/reelsave-portal/",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Download public Instagram Reels and post videos as MP4 files."
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./">REEL<span>SAVE</span></a>
+    <nav>
+      <a class="active" href="./">Downloader</a>
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="./privacy.html">Privacy</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Instagram video downloader</h1>
+    <p class="lede">Paste a public Instagram Reel or post URL. Preview the video, then download the MP4. No Instagram password. Only save content you own or have permission to keep.</p>
+    <form class="card" id="form">
+      <label for="url">Instagram URL</label>
+      <div class="row">
+        <input id="url" name="url" type="url" required placeholder="https://www.instagram.com/reel/..." autocomplete="off" />
+        <button type="submit" id="go">Fetch</button>
+      </div>
+      <p class="status" id="status"></p>
+    </form>
+    <section class="result card" id="result">
+      <img id="thumb" alt="Instagram video thumbnail" hidden />
+      <video id="player" controls playsinline hidden></video>
+      <p class="caption" id="caption"></p>
+      <div class="actions">
+        <a id="download" href="#"><button type="button">Download MP4</button></a>
+        <button type="button" class="ghost" id="open">Open video URL</button>
+      </div>
+    </section>
+    <div class="grid">
+      <article class="card">
+        <h2>Reels and posts</h2>
+        <p>Works with public <code>/reel/</code>, <code>/reels/</code>, and <code>/p/</code> links.</p>
+      </article>
+      <article class="card">
+        <h2>No login</h2>
+        <p>ReelSave never asks for your Instagram password. Private accounts and Stories are blocked.</p>
+      </article>
+    </div>
+    <p class="note">Instagram is a trademark of Meta. ReelSave is not affiliated with Meta. Do not download copyrighted videos you do not have the right to save.</p>
+  </main>
+  <footer>
+    <a href="./how-it-works.html">How it works</a>
+    <a href="./faq.html">FAQ</a>
+    <a href="./privacy.html">Privacy</a>
+  </footer>
+  <script>
+    const form = document.getElementById("form");
+    const statusEl = document.getElementById("status");
+    const result = document.getElementById("result");
+    const player = document.getElementById("player");
+    const thumb = document.getElementById("thumb");
+    const caption = document.getElementById("caption");
+    const download = document.getElementById("download");
+    const openBtn = document.getElementById("open");
+    const go = document.getElementById("go");
+    let currentSrc = "";
+    const apiBase = (location.port === "8787" || location.hostname === "127.0.0.1") ? "" : "";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.textContent = "";
+      result.classList.remove("show");
+      go.disabled = true;
+      try {
+        const res = await fetch(apiBase + "/api/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: document.getElementById("url").value })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not fetch that post. Run the ReelSave server for live downloads.");
+        const video = data.videos[0];
+        currentSrc = video.url;
+        caption.textContent = data.caption || "Public Instagram video";
+        if (video.url) {
+          player.hidden = false;
+          player.src = apiBase + "/api/stream?src=" + encodeURIComponent(video.url);
+          thumb.hidden = true;
+        } else if (data.thumbnail) {
+          thumb.hidden = false;
+          thumb.src = data.thumbnail;
+          player.hidden = true;
+        }
+        download.href = apiBase + "/api/download?src=" + encodeURIComponent(video.url) + "&name=reelsave-" + data.shortcode + ".mp4";
+        result.classList.add("show");
+      } catch (err) {
+        statusEl.textContent = err.message || "Failed";
+      } finally {
+        go.disabled = false;
+      }
+    });
+
+    openBtn.addEventListener("click", () => {
+      if (currentSrc) window.open(currentSrc, "_blank", "noopener");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "ReelSave — Instagram Video Downloader",
+  "short_name": "ReelSave",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080c",
+  "theme_color": "#f97316",
+  "lang": "en",
+  "description": "Download public Instagram Reels and videos you have the right to save. No login."
+}
