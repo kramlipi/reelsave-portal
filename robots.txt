@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://kramlipi.github.io/reelsave-portal/sitemap.xml
+Sitemap: https://reelsave.cluevion.workers.dev/sitemap.xml
 Disallow: /api/
